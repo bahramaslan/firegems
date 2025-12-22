@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>جم های آتشین | مدیریت سفارش‌ها</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; direction: rtl; background:#f7f7f7; margin:0; padding:10px; }
+    h1 { color:#ff4500; font-size:1.4rem; text-align:center; }
+    form { background:#fff; padding:15px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.1); margin-bottom:20px; }
+    label { display:block; margin-top:10px; font-size:0.9rem; }
+    input, select, textarea { width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:6px; font-size:1rem; }
+    button { background:#ff4500; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; width:100%; font-size:1rem; margin-top:10px; }
+    table { width:100%; border-collapse:collapse; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.1); font-size:0.85rem; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:center; }
+    th { background:#ff4500; color:#fff; font-size:0.9rem; }
+    .admin { background:#fff; padding:15px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.1); margin-top:20px; }
+    footer { text-align:center; margin-top:20px; color:#555; }
+    .whatsapp-btn {
+      display:inline-block;
+      background:#25D366;
+      color:#fff;
+      padding:10px 20px;
+      border-radius:8px;
+      text-decoration:none;
+      font-weight:bold;
+      margin-top:10px;
+    }
+    .whatsapp-btn:hover { background:#20b858; }
+    @media (max-width:600px) {
+      table, thead, tbody, th, td, tr { display:block; }
+      tr { margin-bottom:15px; background:#fff; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.05); }
+      td, th { border:none; text-align:right; padding:8px; }
+      th { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <h1>جم های آتشین — مدیریت سفارش مشتری‌ها</h1>
+
+  <!-- فرم ثبت سفارش -->
+  <form id="orderForm">
+    <label>نام مشتری:</label>
+    <input type="text" id="name" required>
+
+    <label>شماره تماس:</label>
+    <input type="tel" id="phone" required>
+
+    <label>بسته انتخابی:</label>
+    <select id="package" required>
+      <option value="">انتخاب کنید</option>
+      <option>110 جم — 140</option>
+      <option>231 جم — 265</option>
+      <option>350 جم — 380</option>
+      <option>590 جم — 650</option>
+      <option>1184 جم — 1200</option>
+      <option>کارت ماهیانه (آیدی) — 1430</option>
+      <option>کارت هفتگی (آیدی) — 370</option>
+      <option>کارت ماهیانه (اطلاعات) — 1060</option>
+      <option>کارت هفتگی (اطلاعات) — 330</option>
+      <option>کارت هفتگی لایت — 120</option>
+      <option>سوپر VIP — 1390</option>
+      <option>افر یک دلاری — 125</option>
+    </select>
+
+    <label>آیدی اکانت:</label>
+    <input type="text" id="accountId" placeholder="مثلاً 12345678" required>
+
+    <label>یادداشت:</label>
+    <textarea id="note" placeholder="توضیحات اضافی مشتری"></textarea>
+
+    <button type="submit">ثبت سفارش</button>
+  </form>
+
+  <!-- جدول نمایش سفارش‌ها -->
+  <h2>لیست سفارش‌ها</h2>
+  <table id="ordersTable">
+    <thead>
+      <tr>
+        <th>کد سفارش</th>
+        <th>نام مشتری</th>
+        <th>شماره تماس</th>
+        <th>بسته</th>
+        <th>آیدی اکانت</th>
+        <th>یادداشت</th>
+        <th>زمان</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- بخش مدیریت با رمز -->
+  <div class="admin">
+    <h3>مدیریت سفارش‌ها</h3>
+    <label>رمز مدیریت:</label>
+    <input type="password" id="adminPass" placeholder="رمز را وارد کنید">
+    <button onclick="clearOrders()">پاک کردن همه سفارش‌ها</button>
+  </div>
+
+  <!-- فوتر با پشتیبانی واتساپ -->
+  <footer>
+    © 2025 جم های آتشین — پشتیبانی: 09921045874  
+    <br>
+    <a class="whatsapp-btn" href="https://wa.me/989921045874?text=سلام%20به%20خاطر%20خرید%20جم%20مزاحم%20شدم" target="_blank">
+      📱 پشتیبانی واتساپ
+    </a>
+  </footer>
+
+  <script>
+    const form = document.getElementById('orderForm');
+    const tableBody = document.querySelector('#ordersTable tbody');
+    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+    const ADMIN_PASSWORD = "1234"; // 🔑 رمز مدیریت
+
+    renderOrders();
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const order = {
+        id: 'AT-' + Date.now(),
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        package: document.getElementById('package').value,
+        accountId: document.getElementById('accountId').value,
+        note: document.getElementById('note').value,
+        time: new Date().toLocaleString('fa-IR')
+      };
+      orders.push(order);
+      localStorage.setItem('orders', JSON.stringify(orders));
+      renderOrders();
+      form.reset();
+      alert('✅ سفارش ثبت شد!\nکد سفارش: ' + order.id + '\nآیدی اکانت: ' + order.accountId);
+    });
+
+    function renderOrders() {
+      tableBody.innerHTML = '';
+      orders.forEach(o => {
+        const row = `<tr>
+          <td>${o.id}</td>
+          <td>${o.name}</td>
+          <td>${o.phone}</td>
+          <td>${o.package}</td>
+          <td>${o.accountId}</td>
+          <td>${o.note}</td>
+          <td>${o.time}</td>
+        </tr>`;
+        tableBody.innerHTML += row;
+      });
+    }
+
+    function clearOrders() {
+      const pass = document.getElementById('adminPass').value;
+      if(pass === ADMIN_PASSWORD){
+        localStorage.removeItem('orders');
+        orders.length = 0;
+        renderOrders();
+        alert("✅ همه سفارش‌ها پاک شدند!");
+      } else {
+        alert("❌ رمز اشتباه است!");
+      }
+    }
+  </script>
+</body>
+</html>
