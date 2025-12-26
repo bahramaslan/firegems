@@ -1,0 +1,130 @@
+package com.chat.atash
+
+import android.os.Bundle
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+
+// مدل پیام
+data class ChatMessage(
+    val text: String,
+    val isMe: Boolean
+)
+
+class MainActivity : AppCompatActivity() {
+
+    private val messages = ArrayList<ChatMessage>()
+    private lateinit var adapter: ChatAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // لایه اصلی
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(20, 20, 20, 20)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT
+            )
+        }
+
+        // لیست پیام‌ها
+        val listView = ListView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                0,
+                1f
+            )
+        }
+
+        adapter = ChatAdapter(messages)
+        listView.adapter = adapter
+
+        // نوار پایین
+        val bottomBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        val input = EditText(this).apply {
+            hint = "پیام بنویس..."
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+
+        val sendBtn = Button(this).apply {
+            text = "ارسال"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        sendBtn.setOnClickListener {
+            val msg = input.text.toString().trim()
+            if (msg.isNotEmpty()) {
+
+                // پیام خودت
+                messages.add(ChatMessage(msg, true))
+
+                // پیام تستی مثل واتساپ
+                messages.add(ChatMessage("پاسخ تستی: $msg", false))
+
+                adapter.notifyDataSetChanged()
+                input.setText("")
+
+                listView.post {
+                    listView.setSelection(messages.size - 1)
+                }
+            }
+        }
+
+        bottomBar.addView(input)
+        bottomBar.addView(sendBtn)
+
+        root.addView(listView)
+        root.addView(bottomBar)
+
+        setContentView(root)
+    }
+
+    // آداپتر نمایش پیام‌ها
+    inner class ChatAdapter(private val items: List<ChatMessage>) : BaseAdapter() {
+        override fun getCount(): Int = items.size
+        override fun getItem(position: Int): Any = items[position]
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val msg = items[position]
+
+            val bubble = TextView(this@MainActivity).apply {
+                text = msg.text
+                textSize = 16f
+                setPadding(25, 15, 25, 15)
+
+                // رنگ حباب‌ها
+                setBackgroundColor(
+                    if (msg.isMe) 0xFFD2F8D2.toInt() else 0xFFFFFFFF.toInt()
+                )
+            }
+
+            val container = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(0, 10, 0, 10)
+                gravity = if (msg.isMe) Gravity.END else Gravity.START
+                addView(bubble)
+            }
+
+            return container
+        }
+    }
+}
